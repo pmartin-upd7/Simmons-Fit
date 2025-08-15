@@ -5,9 +5,9 @@ Created on Wed May 15 15:10:37 2024
 
         V (array) – Bias voltage
 
-        J (float) – A/cm2
+        J (float) – A/m2
 
-        phi (float) – barrier height in eV
+        phio (float) – barrier height in eV
 
         d (float) – barrier width in angstroms
 
@@ -19,10 +19,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 import lmfit
 from lmfit import Model
+#VIBL model doi.org/10.3390/cryst12060767
+#barrier height depent with voltage
 
 def phi(x, phio, gamma):
     
-    return (- gamma*1.602e-19*np.abs(x) + phio*1e-9)
+    return (- gamma*1.602e-19*np.abs(x) + phio*1e-9) #multiply Phi by 10-9 as Parameters did not accept lower value than 10-13
 
 def Simmons (x, d, phio, gamma):
     
@@ -51,7 +53,6 @@ def residual(pars, x, original):
 ###############################################################################
 # Lecture du fichier
 data = np.loadtxt("Sample2-A1.txt", delimiter="\t")
-
 # On prend la 3ᵉ colonne (index 2)
 col = data[:, 2]
 # Détecter les points où la valeur diminue (redémarrage)
@@ -60,10 +61,10 @@ change_points = np.where(np.diff(col) < 0)[0] + 1
 chunks = np.split(data, change_points)
 chunk = chunks[2]  # chunks est ta liste
 x = chunk[:,0]
-y = chunk[:,1]/400e-12
+y = chunk[:,1]/400e-12 #junction surface 20x20µm
 
 ###############################################################################
-# add with tuples: (NAME VALUE VARY MIN  MAX  EXPR  BRUTE_STEP)
+# add parameters with tuples: (NAME VALUE VARY MIN  MAX  EXPR  BRUTE_STEP)
 params = lmfit.Parameters()
 params.add_many(('d', 15e-10, True, 5e-10, 50e-10, None, None),
                 ('phio', 3e-10, True, 0.1e-10, 4e-10, None, None),
@@ -77,7 +78,6 @@ y_eval = gmodel.eval(x=x, d=15e-10, phio=3e-10, gamma=0.1)
 plt.plot(x,y, label='data')
 plt.plot(x, y_eval, label='fit')
 result.plot_fit()
-
 print(result.fit_report())
-
 plt.legend()   
+
